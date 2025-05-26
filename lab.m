@@ -1,0 +1,43 @@
+clc;
+close all;
+
+% figure;
+% hold on;
+% grid on;
+% f = readmatrix("map.csv","NumHeaderLines", 1);
+% x = f(:, 1);
+% y = f(:, 2);
+% plot(x, y);
+
+% figure;
+% hold on; grid on;
+% f = readmatrix("py/map_ks100_kr80_umax75_umin20.csv", NumHeaderLines=1);
+% x = f(:, 1);
+% y = f(:, 2);
+% plot(x, y);
+
+% figure;
+% hold on; grid on;
+% f = readmatrix("py/map_ks100_kr60_umax75_umin20.csv", NumHeaderLines=1);
+% x = f(:, 1);
+% y = f(:, 2);
+% plot(x, y);
+
+% figure;
+% hold on; grid on;
+% f = readmatrix("py/map_ks100_kr60_umax60_umin20.csv", NumHeaderLines=1);
+% x = f(:, 1);
+% y = f(:, 2);
+% plot(x, y);
+
+figure;
+hold on; grid on;
+f = readmatrix("py/map_ks80_kr40_umax75_umin20.csv", NumHeaderLines=1);
+x = f(:, 1);
+y = f(:, 2);
+rho = f(:, 5);
+theta = f(:, 7);
+plot(x, y);
+
+figure;
+plot(theta ./ pi .* 180);
