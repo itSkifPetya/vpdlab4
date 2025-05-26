@@ -12,13 +12,6 @@ class Odometry:
         self.x = 0.0
         self.y = 0.0
         self.theta = 0.0
-    
-    # def normalize_angle(self, angle):
-    #     while angle > pi:
-    #         angle -= 2*pi
-    #     while angle < -pi:
-    #         angle += 2*pi
-    #     return angle
 
     def get_speed(self, wl: float, wr: float) -> tuple:
         v = (wr + wl) * self.r / 2
