@@ -108,7 +108,8 @@ def control(x_goal: float, y_goal: float, temp):
         
         # Using temporary string because writing directly to a file
         # disturbs period of cycle
-        temp += '{}, {}, {}, {}, {}, {}, {}\n'.format(x, y, ul, ur, speed_error, angular_error, theta)
+        # temp += '{}, {}, {}, {}, {}, {}, {}\n'.format(x, y, ul, ur, speed_error, angular_error, theta)
+        temp.append([x, y, ul, ur, speed_error, angular_error, theta])
             
         # Motors control
         L_MOTOR.run_direct(duty_cycle_sp=ul)
@@ -122,19 +123,21 @@ def control(x_goal: float, y_goal: float, temp):
             # warn means that period T is too small
             print("warning")
 
-
+def data_form(ar) -> str:
+    return "\n".join(str(",".join([str(y) for y in x])) for x in ar)
 
 if __name__ == "__main__":
     try:
-        spkr.speak("start")
+        spkr.speak("start", volume=50)
         for x, y in TARGETS:
-            temp = ""
+            # temp = ""
+            temp_ar = []
             print("Current target: ({}, {})".format(x, y))
-            control(x, y, temp)
+            control(x, y, temp_ar)
             if f is not None:
-                f.write(temp)
-            spkr.speak("task {} {} done".format(x, y), volume=100)
+                f.write(data_form(temp_ar))
+            spkr.speak("task {} {} done".format(x, y), volume=50)
     finally:
         L_MOTOR.stop()
         R_MOTOR.stop()
-        spkr.speak("all tasks done")
+        spkr.speak("all tasks done", volume=50)
