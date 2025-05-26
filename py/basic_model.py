@@ -65,8 +65,8 @@ def saturation(u, u_max=U_MAX, u_min=U_MIN):
         return u_max
     elif u < -u_max:
         return -u_max
-    # elif 0 < u < u_min: return u_min
-    # elif -u_min < u < 0: return -u_min
+    elif 0 < u < u_min: return u_min
+    elif -u_min < u < 0: return -u_min
     else: return u
 
 # Main control function
@@ -108,7 +108,7 @@ def control(x_goal: float, y_goal: float, temp):
 
         ul = saturation(v_g - w_g, u_max=60)
         ur = saturation(v_g + w_g, u_max=60)
-        
+
         # Using temporary string because writing directly to a file
         # disturbs period of cycle
         temp += '{}, {}, {}, {}, {}, {}, {}\n'.format(x, y, ul, ur, speed_error, angular_error, theta)
