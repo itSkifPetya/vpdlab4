@@ -1,6 +1,6 @@
 from math import cos, sin, pi
 from Integrator import Integrator
-#расчет оценки координат x,y,theta (Одометрия)
+
 class Odometry:
     def __init__(self, r: float, B: float, T: float):
         self.r = r
@@ -24,7 +24,6 @@ class Odometry:
     def update(self, wl: float, wr: float) -> tuple:
         dx, dy, dth = self.get_speed(wl, wr)
 
-        #Обновление координат и угла через интегрирование
         self.x = self.x_integrator.update(dx)
         self.y = self.y_integrator.update(dy)
         self.theta = self.theta_integrator.update(dth)

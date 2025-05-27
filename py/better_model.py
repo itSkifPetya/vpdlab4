@@ -3,6 +3,8 @@ from Odometry import Odometry
 import time
 from ev3dev2 import motor, sound
 
+f = None
+
 # Speaker initialization
 spkr = sound.Sound()
 
@@ -74,6 +76,7 @@ def control(x_goal: float, y_goal: float, temp):
     state = "TURN"
     while True:
         cycle_start_time = time.time()
+
         # Update coordinates
         x, y, theta = OD.update(
             L_MOTOR.speed * pi/180,
@@ -81,10 +84,10 @@ def control(x_goal: float, y_goal: float, temp):
         )
         
         # Calculate control
-        speed_error, angular_error = get_error(x_goal, y_goal, x, y, theta)       # 3. Checkout stop-condition
+        distance_error, angular_error = get_error(x_goal, y_goal, x, y, theta)
         
         # Destination check
-        if round(speed_error, 2) < 0.05:
+        if round(distance_error, 2) < 0.05:
             L_MOTOR.stop()
             R_MOTOR.stop()
             print("Target {} {} reached!".format(x_goal, y_goal))
@@ -95,7 +98,7 @@ def control(x_goal: float, y_goal: float, temp):
             state = "FORWARD"
 
         # Calculate control
-        v_g = saturation(KS * speed_error)
+        v_g = saturation(KS * distance_error)
         w_g = saturation(KR * angular_error, u_max=40, u_min=5)
 
         # separated turn and forward movement
@@ -109,7 +112,7 @@ def control(x_goal: float, y_goal: float, temp):
         # Using temporary string because writing directly to a file
         # disturbs period of cycle
         # temp += '{}, {}, {}, {}, {}, {}, {}\n'.format(x, y, ul, ur, speed_error, angular_error, theta)
-        temp.append([x, y, ul, ur, speed_error, angular_error, theta])
+        temp.append([x, y, ul, ur, distance_error, angular_error, theta])
             
         # Motors control
         L_MOTOR.run_direct(duty_cycle_sp=ul)

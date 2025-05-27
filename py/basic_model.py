@@ -3,6 +3,7 @@ from Odometry import Odometry
 import time
 from ev3dev2 import motor, sound
 
+f = None
 # Speaker initialization
 spkr = sound.Sound()
 
@@ -71,7 +72,6 @@ def saturation(u, u_max=U_MAX, u_min=U_MIN):
 
 # Main control function
 def control(x_goal: float, y_goal: float, temp):
-    # state = "TURN"
     while True:
         cycle_start_time = time.time()
         # Update coordinates
@@ -81,7 +81,7 @@ def control(x_goal: float, y_goal: float, temp):
         )
         
         # Calculate control
-        speed_error, angular_error = get_error(x_goal, y_goal, x, y, theta)       # 3. Checkout stop-condition
+        speed_error, angular_error = get_error(x_goal, y_goal, x, y, theta)
         
         # Destination check
         if round(speed_error, 2) < 0.05:
@@ -90,21 +90,9 @@ def control(x_goal: float, y_goal: float, temp):
             print("Target {} {} reached!".format(x_goal, y_goal))
             break
 
-        # Azimuth check
-        # if round(angular_error, 3) < 0.005:
-        #     state = "FORWARD"
-
         # Calculate control
         v_g = saturation(KS * speed_error)
         w_g = saturation(KR * angular_error, u_max=40, u_min=5)
-
-        # separated turn and forward movement
-        # if state == "TURN":
-        #     ul = saturation(-w_g, u_min=18, u_max=35)
-        #     ur = saturation(w_g, u_min=18, u_max=35)
-        # if state == "FORWARD":
-        #     ul = saturation(v_g - w_g, u_max=60)
-        #     ur = saturation(v_g + w_g, u_max=60)
 
         ul = saturation(v_g - w_g, u_max=60)
         ur = saturation(v_g + w_g, u_max=60)
