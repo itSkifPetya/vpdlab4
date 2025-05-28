@@ -83,17 +83,17 @@ def control(x_goal: float, y_goal: float, temp):
         )
         print(x, y)
         # Calculate control
-        speed_error, angular_error = get_error(x_goal, y_goal, x, y, theta)
+        distance_error, angular_error = get_error(x_goal, y_goal, x, y, theta)
         
         # Destination check
-        if round(speed_error, 2) < 0.05:
+        if round(distance_error, 2) < 0.05:
             L_MOTOR.stop()
             R_MOTOR.stop()
             print("Target {} {} reached!".format(x_goal, y_goal))
             break
 
         # Calculate control
-        v_g = saturation(KS * speed_error)
+        v_g = saturation(KS * distance_error)
         w_g = saturation(KR * angular_error, u_max=40, u_min=5)
 
         ul = saturation(v_g - w_g, u_max=60)
@@ -102,7 +102,7 @@ def control(x_goal: float, y_goal: float, temp):
         # Using temporary string because writing directly to a file every time
         # disturbs period of cycle
         # temp += '{}, {}, {}, {}, {}, {}, {}\n'.format(x, y, ul, ur, speed_error, angular_error, theta)
-        temp.append([x, y, ul, ur, speed_error, angular_error, theta])
+        temp.append([x, y, ul, ur, distance_error, angular_error, theta])
 
         # Motors control
         L_MOTOR.run_direct(duty_cycle_sp=ul)
