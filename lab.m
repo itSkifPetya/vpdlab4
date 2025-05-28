@@ -45,6 +45,8 @@ close all;
 % TARGETS = [0.5, 0.5; -0.5, 0.5; -0.5, -0.5; 0.5, -0.5; 0.5, 0.5];
 % TARGETS = [0.5, 0.5; -0.5, 0.5]%; -0.5, -0.5; 0.5, -0.5; 0.5, 0.5];
 % TARGETS = [0, 1; 1, 0; 0, -1; -1, 0];
+TARGETS = [1, 1; -1, 1; -1, -1; 1, -1; 1, 1];
+TARGETS = TARGETS / 2;
 
 
 % Simulink motor config from lab2
@@ -96,8 +98,7 @@ ylabel("Y, м");
 legend("show", "Location","best");
 
 
-TARGETS = [1, 1; -1, 1; -1, -1; 1, -1; 1, 1];
-TARGETS = TARGETS / 2;
+
 
 figure;
 hold on; grid on;

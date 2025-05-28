@@ -34,7 +34,7 @@ U_MAX =80  # max duty_cycle_sp
 U_MIN = 20 # min duty_cycle_sp
 
 # Telemetry file init
-f = open("basic_ks{}_kr{}_umax{}_umin{}.csv".format(KS, KR, U_MAX, U_MIN), "w+")
+f = open("split_basic_ks{}_kr{}_umax{}_umin{}.csv".format(KS, KR, U_MAX, U_MIN), "w+")
 f.write("x, y, ul, ur, rho, alpha, theta\n")
 
 # Motors init
@@ -42,7 +42,7 @@ L_MOTOR = motor.LargeMotor(motor.OUTPUT_C)
 R_MOTOR = motor.LargeMotor(motor.OUTPUT_B)
 
 # Odometry init
-OD = Odometry(WHEEL_RADIUS, BASE, T)
+# OD = Odometry(WHEEL_RADIUS, BASE, T)
 
 # Normalize angle function
 def normalize_angle(angle):
@@ -73,11 +73,11 @@ def saturation(u, u_max=U_MAX, u_min=U_MIN):
     else: return u
 
 # Main control function
-def control(x_goal: float, y_goal: float, temp):
+def control(x_goal: float, y_goal: float, temp, odometry):
     while True:
         cycle_start_time = time.time()
         # Update coordinates
-        x, y, theta = OD.update(
+        x, y, theta = odometry.update(
             L_MOTOR.speed * pi/180,
             R_MOTOR.speed * pi/180
         )
@@ -123,14 +123,15 @@ if __name__ == "__main__":
     try:
         # spkr.speak("start", volume=50)
         for x_goal, y_goal in TARGETS:
+            OD = Odometry(WHEEL_RADIUS, BASE, T)
             # temp = ""
             temp_ar = []
             print("Current target: ({}, {})".format(x_goal, y_goal))
-            control(x_goal, y_goal, temp_ar)
+            control(x_goal, y_goal, temp_ar, OD)
             if f is not None:
                 f.write(data_form(temp_ar))
             # spkr.speak("task {} {} done".format(x, y), volume=50)
-            time.sleep(7)
+            time.sleep(10)
             # OD.update(0,0)
     finally:
         L_MOTOR.stop()
