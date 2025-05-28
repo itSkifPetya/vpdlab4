@@ -69,40 +69,44 @@ BASE =  11.5 / 100; % # space between centers of wheels!!! (meters)
 KS = 15; % # linear speed
 KR = 30; %# angular speed
 
-% Real robot basic model results
-f = readmatrix("py/basic_ks80_kr40_umax75_umin20.csv", NumHeaderLines=1);
-x = f(:, 1);
-y = f(:, 2);
-figure (1);
+
+
+% % % % % Task 1. Split targets
+TARGETS = [0, 0.5; 0.5, 0; 0, -0.5; -0.5, 0];
+figure;
 hold on; grid on;
-title("Траектория базовой модели");
-plot(x, y, LineWidth=2, DisplayName="Traectory", color=[0 0.82 1]);
 plot(TARGETS(:, 1), TARGETS(:, 2), 'o', LineWidth=3, DisplayName="Targets", color=[0 0 1]);
 plot(0, 0,  'o', LineWidth=3, DisplayName="Start point", Color=[0 1 0]);
-xlabel("X, м");
-ylabel("Y, м");
-legend("show", "Location","best");
+for i = 1:size(TARGETS)
+    goal_x = TARGETS(i, 1);
+    goal_y = TARGETS(i, 2);
+    ini_x = 0;
+    ini_y = 0;
+    f = readmatrix(sprintf("py/split_basic_ks120_kr160_umax90_umin25_%d", i));
+    x = f(:, 1);
+    y = f(:, 2);
+    plot(x, y, LineWidth=2, DisplayName="Robot", color=[0 0.82 1]);
+    
+    simOut = sim("lab4sim.slx", "ReturnWorkspaceOutputs", "on");
+    x_out = simOut.x.Data;
+    y_out = simOut.y.Data;
+    plot(x_out, y_out, "--" ,LineWidth=2, DisplayName="Sim", color=[0.5 0.5 0.5]);
+end
 
-% Real robot better model results
-f = readmatrix("py/better_ks80_kr40_umax75_umin20.csv", NumHeaderLines=1);
+legend("show", "Location","bestoutside");
+
+
+% % % Task 2. Square traectory
+f = readmatrix("py/base_ks120_kr160_umax90_umin25.csv");
 x = f(:, 1);
 y = f(:, 2);
-figure (2);
-hold on; grid on;
-title("Траектория улучшенной модели");
-plot(x, y, LineWidth=2, DisplayName="Traectory", color=[0 0.82 1]);
-plot(TARGETS(:, 1), TARGETS(:, 2), 'o', LineWidth=3, DisplayName="Targets", color=[0 0 1]);
-plot(0, 0,  'o', LineWidth=3, DisplayName="Start point", Color=[0 1 0]);
-xlabel("X, м");
-ylabel("Y, м");
-legend("show", "Location","best");
-
-
-
 
 figure;
 hold on; grid on;
-title("Симулинк нахуй");
+title("");
+
+plot(x, y, LineWidth=2, DisplayName="Robot", color=[0 0.82 1]);
+
 ini_x = 0;
 ini_y = 0;
 for i = 1:size(TARGETS, 1)
@@ -112,7 +116,7 @@ for i = 1:size(TARGETS, 1)
     simOut = sim("lab4sim.slx", "ReturnWorkspaceOutputs", "on");
     x_out = simOut.x.Data;
     y_out = simOut.y.Data;
-    plot(x_out, y_out, "--" ,LineWidth=2, DisplayName="Traectory", color=[0.5 0.5 0.5]);
+    plot(x_out, y_out, "--" ,LineWidth=2, DisplayName="Sim", color=[0.5 0.5 0.5]);
     
     ini_x = x_out(end);
     ini_y = y_out(end);
@@ -121,35 +125,35 @@ plot(x, y, LineWidth=2, DisplayName="Traectory", color=[0 0.82 1]);
 plot(TARGETS(:, 1), TARGETS(:, 2), 'o', LineWidth=3, DisplayName="Targets", color=[0 0 1]);
 plot(0, 0,  'o', LineWidth=3, DisplayName="Start point", Color=[0 1 0]);
 
-
-figure;
-hold on; grid on;
-title("Симулинк нахуй");
-ini_x = 0;
-ini_y = 0;
-for i = 1:size(TARGETS, 1)
-    goal_x = TARGETS(i, 1);
-    goal_y = TARGETS(i, 2);
-
-    simOut = sim("lab4sim.slx", "ReturnWorkspaceOutputs", "on");
-    x_out = simOut.x.Data;
-    y_out = simOut.y.Data;
-    plot(x_out, y_out, "--" ,LineWidth=2, DisplayName="Traectory", color=[0.5 0.5 0.5]);
-    
-    ini_x = x_out(end);
-    ini_y = y_out(end);
-end
-plot(x, y, LineWidth=2, DisplayName="Traectory", color=[0 0.82 1]);
-plot(TARGETS(:, 1), TARGETS(:, 2), 'o', LineWidth=3, DisplayName="Targets", color=[0 0 1]);
-plot(0, 0,  'o', LineWidth=3, DisplayName="Start point", Color=[0 1 0]);
-
-
-
+% 
+% figure;
+% hold on; grid on;
+% title("Симулинк нахуй");
+% ini_x = 0;
+% ini_y = 0;
+% for i = 1:size(TARGETS, 1)
+%     goal_x = TARGETS(i, 1);
+%     goal_y = TARGETS(i, 2);
+% 
+%     simOut = sim("lab4sim.slx", "ReturnWorkspaceOutputs", "on");
+%     x_out = simOut.x.Data;
+%     y_out = simOut.y.Data;
+%     plot(x_out, y_out, "--" ,LineWidth=2, DisplayName="Traectory", color=[0.5 0.5 0.5]);
+%     
+%     ini_x = x_out(end);
+%     ini_y = y_out(end);
+% end
+% plot(x, y, LineWidth=2, DisplayName="Traectory", color=[0 0.82 1]);
+% plot(TARGETS(:, 1), TARGETS(:, 2), 'o', LineWidth=3, DisplayName="Targets", color=[0 0 1]);
+% plot(0, 0,  'o', LineWidth=3, DisplayName="Start point", Color=[0 1 0]);
+% 
 
 
 
 
-
+% 
+% 
+% 
 % 
 % figHandles = findobj('Type', 'figure'); % Получаем все графические окна
 % for i = 1:length(figHandles)

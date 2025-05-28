@@ -19,25 +19,24 @@ TARGETS = [(0.5, 0.5), (-0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (0.5, 0.5)]
 # BASE =  13  / 100  # space between centers of wheels!!! (meters)
 
 WHEEL_RADIUS = (7/2) / 100  # wheel radius (meters)
-BASE =  11.5 / 100  # space between centers of wheels!!! (meters)
+# BASE =  11.5 / 100  # space between centers of wheels!!! (meters)
+BASE =  12 / 100  # space between centers of wheels!!! (meters)
 
 # Cycle period
 T = 0.045  
 
 # Reg params
-KS = 80  # linear speed
-KR = 40 # angular speed
+KS = 120  # linear speed
+KR = 160 # angular speed
 
 # Default saturation params
-U_MAX = 75  # max duty_cycle_sp
-U_MIN = 20 # min duty_cycle_sp
+U_MAX = 90  # max duty_cycle_sp
+U_MIN = 25 # min duty_cycle_sp
 
-# Telemetry file init
-f = open("better_ks{}_kr{}_umax{}_umin{}.csv".format(KS, KR, U_MAX, U_MIN), "w+")
-f.write("x, y, ul, ur, rho, alpha, theta\n")
+
 
 # Motors init
-L_MOTOR = motor.LargeMotor(motor.OUTPUT_A)
+L_MOTOR = motor.LargeMotor(motor.OUTPUT_C)
 R_MOTOR = motor.LargeMotor(motor.OUTPUT_B)
 
 # Odometry init
@@ -72,48 +71,37 @@ def saturation(u, u_max=U_MAX, u_min=U_MIN):
     else: return u
 
 # Main control function
-def control(x_goal: float, y_goal: float, temp):
-    state = "TURN"
+def control(x_goal: float, y_goal: float, temp, odometry):
     while True:
         cycle_start_time = time.time()
-
         # Update coordinates
-        x, y, theta = OD.update(
+        x, y, theta = odometry.update(
             L_MOTOR.speed * pi/180,
             R_MOTOR.speed * pi/180
         )
-        
+        print(x, y)
         # Calculate control
-        distance_error, angular_error = get_error(x_goal, y_goal, x, y, theta)
+        speed_error, angular_error = get_error(x_goal, y_goal, x, y, theta)
         
         # Destination check
-        if round(distance_error, 2) < 0.05:
-            L_MOTOR.stop()
-            R_MOTOR.stop()
+        if round(speed_error, 2) < 0.05:
+            # L_MOTOR.stop()
+            # R_MOTOR.stop()
             print("Target {} {} reached!".format(x_goal, y_goal))
             break
 
-        # Azimuth check
-        if round(angular_error, 3) < 0.005:
-            state = "FORWARD"
-
         # Calculate control
-        v_g = saturation(KS * distance_error)
-        w_g = saturation(KR * angular_error, u_max=40, u_min=5)
+        v_g = saturation(KS * speed_error)
+        w_g = saturation(KR * angular_error, u_min=5)
 
-        # separated turn and forward movement
-        if state == "TURN":
-            ul = saturation(-w_g, u_min=18, u_max=35)
-            ur = saturation(w_g, u_min=18, u_max=35)
-        if state == "FORWARD":
-            ul = saturation(v_g - w_g, u_max=60)
-            ur = saturation(v_g + w_g, u_max=60)
-        
-        # Using temporary string because writing directly to a file
+        ul = saturation(v_g - w_g)
+        ur = saturation(v_g + w_g)
+
+        # Using temporary string because writing directly to a file every time
         # disturbs period of cycle
         # temp += '{}, {}, {}, {}, {}, {}, {}\n'.format(x, y, ul, ur, speed_error, angular_error, theta)
-        temp.append([x, y, ul, ur, distance_error, angular_error, theta])
-            
+        temp.append([x, y, ul, ur, speed_error, angular_error, theta])
+
         # Motors control
         L_MOTOR.run_direct(duty_cycle_sp=ul)
         R_MOTOR.run_direct(duty_cycle_sp=ur)
@@ -132,15 +120,17 @@ def data_form(ar) -> str:
 if __name__ == "__main__":
     try:
         spkr.speak("start", volume=50)
-        for x, y in TARGETS:
+        for x_goal, y_goal in TARGETS:
             # temp = ""
             temp_ar = []
-            print("Current target: ({}, {})".format(x, y))
-            control(x, y, temp_ar)
+            print("Current target: ({}, {})".format(x_goal, y_goal))
+            control(x_goal, y_goal, temp_ar)
             if f is not None:
                 f.write(data_form(temp_ar))
-            spkr.speak("task {} {} done".format(x, y), volume=50)
+            print("task {} {} done".format(x_goal, y_goal))
+            spkr.speak("task {} {} done".format(x_goal, y_goal), volume=50)
     finally:
         L_MOTOR.stop()
         R_MOTOR.stop()
+        print("all tasks done")
         spkr.speak("all tasks done", volume=50)

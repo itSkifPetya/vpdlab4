@@ -8,8 +8,8 @@ f = None
 spkr = sound.Sound()
 
 # Targets
-# TARGETS = [(0.5, 0.5), (-0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (0.5, 0.5)]
-TARGETS = [(0.5, 0), (0, 0.5), (-0.5, 0), (0, -0.5)]
+TARGETS = [(0.5, 0.5), (-0.5, 0.5), (-0.5, -0.5), (0.5, -0.5), (0.5, 0.5)]
+# TARGETS = [(0.5, 0), (0, 0.5), (-0.5, 0), (0, -0.5)]
 
 ### Robot configs
 # WHEEL_RADIUS = 3.4 / 100  # wheel radius (meters)
@@ -19,22 +19,22 @@ TARGETS = [(0.5, 0), (0, 0.5), (-0.5, 0), (0, -0.5)]
 # BASE =  13  / 100  # space between centers of wheels!!! (meters)
 
 WHEEL_RADIUS = (7/2) / 100  # wheel radius (meters)
-# BASE =  11.5 / 100  # space between centers of wheels!!! (meters)
-BASE =  12.5 / 100  # space between centers of wheels!!! (meters)
+BASE =  11.5 / 100  # space between centers of wheels!!! (meters)
+# BASE =  11.8 / 100  # space between centers of wheels!!! (meters)
 
 # Cycle period
 T = 0.045  
 
 # Reg params
-KS = 80  # linear speed
-KR = 120 # angular speed
+KS = 120  # linear speed
+KR = 160 # angular speed
 
 # Default saturation params
-U_MAX =80  # max duty_cycle_sp
-U_MIN = 20 # min duty_cycle_sp
+U_MAX = 90  # max duty_cycle_sp
+U_MIN = 25 # min duty_cycle_sp
 
 # Telemetry file init
-f = open("basic_ks{}_kr{}_umax{}_umin{}.csv".format(KS, KR, U_MAX, U_MIN), "w+")
+f = open("base_ks{}_kr{}_umax{}_umin{}.csv".format(KS, KR, U_MAX, U_MIN), "w+")
 f.write("x, y, ul, ur, rho, alpha, theta\n")
 
 # Motors init
@@ -42,7 +42,7 @@ L_MOTOR = motor.LargeMotor(motor.OUTPUT_C)
 R_MOTOR = motor.LargeMotor(motor.OUTPUT_B)
 
 # Odometry init
-OD = Odometry(WHEEL_RADIUS, BASE, T)
+ODOMETRY = Odometry(WHEEL_RADIUS, BASE, T)
 
 # Normalize angle function
 def normalize_angle(angle):
@@ -77,32 +77,32 @@ def control(x_goal: float, y_goal: float, temp):
     while True:
         cycle_start_time = time.time()
         # Update coordinates
-        x, y, theta = OD.update(
+        x, y, theta = ODOMETRY.update(
             L_MOTOR.speed * pi/180,
             R_MOTOR.speed * pi/180
         )
         print(x, y)
         # Calculate control
-        distance_error, angular_error = get_error(x_goal, y_goal, x, y, theta)
+        speed_error, angular_error = get_error(x_goal, y_goal, x, y, theta)
         
         # Destination check
-        if round(distance_error, 2) < 0.05:
-            L_MOTOR.stop()
-            R_MOTOR.stop()
+        if round(speed_error, 2) < 0.03:
+            # L_MOTOR.stop()
+            # R_MOTOR.stop()
             print("Target {} {} reached!".format(x_goal, y_goal))
             break
 
         # Calculate control
-        v_g = saturation(KS * distance_error)
-        w_g = saturation(KR * angular_error, u_max=40, u_min=5)
+        v_g = saturation(KS * speed_error)
+        w_g = saturation(KR * angular_error, u_min=5)
 
-        ul = saturation(v_g - w_g, u_max=60)
-        ur = saturation(v_g + w_g, u_max=60)
+        ul = saturation(v_g - w_g)
+        ur = saturation(v_g + w_g)
 
         # Using temporary string because writing directly to a file every time
         # disturbs period of cycle
         # temp += '{}, {}, {}, {}, {}, {}, {}\n'.format(x, y, ul, ur, speed_error, angular_error, theta)
-        temp.append([x, y, ul, ur, distance_error, angular_error, theta])
+        temp.append([x, y, ul, ur, speed_error, angular_error, theta])
 
         # Motors control
         L_MOTOR.run_direct(duty_cycle_sp=ul)
@@ -121,7 +121,7 @@ def data_form(ar) -> str:
 
 if __name__ == "__main__":
     try:
-        # spkr.speak("start", volume=50)
+        spkr.speak("start", volume=50)
         for x_goal, y_goal in TARGETS:
             # temp = ""
             temp_ar = []
@@ -130,9 +130,8 @@ if __name__ == "__main__":
             if f is not None:
                 f.write(data_form(temp_ar))
             # spkr.speak("task {} {} done".format(x, y), volume=50)
-            time.sleep(7)
-            # OD.update(0,0)
     finally:
         L_MOTOR.stop()
         R_MOTOR.stop()
-        # spkr.speak("all tasks done", volume=50)
+        print("all tasks done")
+        spkr.speak("all tasks done", volume=50)

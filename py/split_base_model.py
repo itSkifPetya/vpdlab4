@@ -20,22 +20,20 @@ TARGETS = [(0.5, 0), (0, 0.5), (-0.5, 0), (0, -0.5)]
 
 WHEEL_RADIUS = (7/2) / 100  # wheel radius (meters)
 # BASE =  11.5 / 100  # space between centers of wheels!!! (meters)
-BASE =  12.5 / 100  # space between centers of wheels!!! (meters)
+BASE =  12 / 100  # space between centers of wheels!!! (meters)
 
 # Cycle period
 T = 0.045  
 
 # Reg params
-KS = 80  # linear speed
-KR = 120 # angular speed
+KS = 120  # linear speed
+KR = 160 # angular speed
 
 # Default saturation params
-U_MAX =80  # max duty_cycle_sp
-U_MIN = 20 # min duty_cycle_sp
+U_MAX = 90  # max duty_cycle_sp
+U_MIN = 25 # min duty_cycle_sp
 
-# Telemetry file init
-f = open("split_basic_ks{}_kr{}_umax{}_umin{}.csv".format(KS, KR, U_MAX, U_MIN), "w+")
-f.write("x, y, ul, ur, rho, alpha, theta\n")
+
 
 # Motors init
 L_MOTOR = motor.LargeMotor(motor.OUTPUT_C)
@@ -87,17 +85,17 @@ def control(x_goal: float, y_goal: float, temp, odometry):
         
         # Destination check
         if round(speed_error, 2) < 0.05:
-            L_MOTOR.stop()
-            R_MOTOR.stop()
+            # L_MOTOR.stop()
+            # R_MOTOR.stop()
             print("Target {} {} reached!".format(x_goal, y_goal))
             break
 
         # Calculate control
         v_g = saturation(KS * speed_error)
-        w_g = saturation(KR * angular_error, u_max=40, u_min=5)
+        w_g = saturation(KR * angular_error, u_min=5)
 
-        ul = saturation(v_g - w_g, u_max=60)
-        ur = saturation(v_g + w_g, u_max=60)
+        ul = saturation(v_g - w_g)
+        ur = saturation(v_g + w_g)
 
         # Using temporary string because writing directly to a file every time
         # disturbs period of cycle
@@ -118,22 +116,28 @@ def control(x_goal: float, y_goal: float, temp, odometry):
 
 def data_form(ar) -> str:
     return "\n".join(str(",".join([str(y) for y in x])) for x in ar)
-
+c = 0
 if __name__ == "__main__":
     try:
         # spkr.speak("start", volume=50)
         for x_goal, y_goal in TARGETS:
+            c+=1
             OD = Odometry(WHEEL_RADIUS, BASE, T)
+            # Telemetry file init
+            f = open("split_basic_ks{}_kr{}_umax{}_umin{}_{}.csv".format(KS, KR, U_MAX, U_MIN, c), "w+")
+            f.write("x, y, ul, ur, rho, alpha, theta\n")
             # temp = ""
             temp_ar = []
             print("Current target: ({}, {})".format(x_goal, y_goal))
             control(x_goal, y_goal, temp_ar, OD)
             if f is not None:
                 f.write(data_form(temp_ar))
+            print("task {} {} done".format(x_goal, y_goal))
             # spkr.speak("task {} {} done".format(x, y), volume=50)
             time.sleep(10)
             # OD.update(0,0)
     finally:
         L_MOTOR.stop()
         R_MOTOR.stop()
+        print("all tasks done")
         # spkr.speak("all tasks done", volume=50)
